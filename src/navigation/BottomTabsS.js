@@ -2,31 +2,29 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
-import GratitudeEntryScreen from "../screens/GratitudeEntryScreen";
 import GratitudeListScreen from "../screens/GratitudeListScreen";
 import MotivationalScreen from "../screens/MotivationalScreen";
 import AboutScreen from "../screens/AboutScreen";
-
-
 
 const Tab = createBottomTabNavigator();
 
 const ICONS = {
     Home: require('../assets/img/bot/iconamoon_home-fill.png'),
-    GratitudeListScreen:  require('../assets/img/bot/game-icons_sea-dragon.png'),
+    GratitudeListScreen: require('../assets/img/bot/game-icons_sea-dragon.png'),
     MotivationalScreen: require('../assets/img/bot/streamline-ultimate_graph-stats-circle-bold.png'),
-
     AboutScreen: require('../assets/img/bot/tabler_file-info-filled.png'),
-
 };
 
 const screenOptions = ({ route }) => ({
     headerShown: false,
     tabBarLabel: '',
-    tabBarIcon: () => (
+    tabBarIcon: ({ focused }) => (
         <Image
             source={ICONS[route.name] || ICONS.Home}
             resizeMode="contain"
+            style={{
+                tintColor: focused ? '#FFD700' : '#FFFFFF', // желтый при выборе, белый иначе
+            }}
         />
     ),
     tabBarStyle: {
@@ -62,10 +60,7 @@ const BottomTabsS = () => {
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="GratitudeListScreen" component={GratitudeListScreen} />
             <Tab.Screen name="MotivationalScreen" component={MotivationalScreen} />
-
             <Tab.Screen name="AboutScreen" component={AboutScreen} />
-
-
         </Tab.Navigator>
     );
 };

@@ -15,7 +15,7 @@ import WelcomeScreen2 from "./src/screens/WelcomeScreen2";
 import BottomTabsS from "./src/navigation/BottomTabsS";
 import GratitudeEntryScreen from "./src/screens/GratitudeEntryScreen";
 import FireExtinguisherGame from "./src/screens/FireExtinguisherGame";
-import ActionFlameScreen from "./src/screens/ActionFlameScreen";
+import ActionFlameScreen from "./src/screens/ActionFlameScreen.tsx";
 
 
 

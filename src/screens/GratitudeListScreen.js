@@ -1,234 +1,139 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
-    ImageBackground,
-    SafeAreaView,
-    FlatList,
     TouchableOpacity,
     Image,
-    Alert,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    ImageBackground
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import ImagePuzzle from "./puzzles/ImagePuzzle";
+import MathPuzzle from "./puzzles/MathPuzzle";
+import LogicPuzzle from "./puzzles/LogicPuzzle";
+import WordPuzzle from "./puzzles/WordPuzzle";
 
-const GratitudeListScreen = ({ navigation }) => {
-    const [gratitudeEntries, setGratitudeEntries] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
 
-    const fetchGratitudeEntries = async () => {
+const PUZZLES_KEY = 'puzzleProgress';
+
+const PuzzleChallengesScreen = () => {
+    const [puzzles, setPuzzles] = useState([
+        { id: 1, title: 'Picture Puzzle', type: 'image', solved: false },
+        { id: 2, title: 'Math Puzzle', type: 'math', solved: false },
+        { id: 3, title: 'Logic Puzzle', type: 'logic', solved: false },
+        { id: 4, title: 'Word Puzzle', type: 'word', solved: false },
+    ]);
+
+    const [activePuzzle, setActivePuzzle] = useState(null);
+
+    useEffect(() => {
+        loadProgress();
+    }, []);
+
+    const loadProgress = async () => {
         try {
-            const entries = await AsyncStorage.getItem('gratitudeEntries');
-            if (entries) {
-                const parsedEntries = JSON.parse(entries);
-                // Sort entries by date (newest first)
-                const sortedEntries = parsedEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-                setGratitudeEntries(sortedEntries);
+            const saved = await AsyncStorage.getItem(PUZZLES_KEY);
+            if (saved) {
+                setPuzzles(JSON.parse(saved));
             }
-        } catch (error) {
-            console.error('Failed to fetch gratitude entries:', error);
-            Alert.alert('Error', 'Failed to load your entries.');
-        } finally {
-            setIsLoading(false);
+        } catch (e) {
+            console.log('Ошибка загрузки прогресса:', e);
         }
     };
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchGratitudeEntries();
-        }, [])
-    );
-
-    const handleDelete = async (date) => {
-        Alert.alert(
-            'Delete entry?',
-            'Are you sure you want to delete this gratitude entry?',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Delete',
-                    onPress: async () => {
-                        try {
-                            const updatedEntries = gratitudeEntries.filter(entry => entry.date !== date);
-                            await AsyncStorage.setItem('gratitudeEntries', JSON.stringify(updatedEntries));
-                            setGratitudeEntries(updatedEntries);
-                            Alert.alert('Success', 'Entry deleted.');
-                        } catch (error) {
-                            console.error('Failed to delete entry:', error);
-                            Alert.alert('Error', 'Failed to delete the entry.');
-                        }
-                    },
-                    style: 'destructive',
-                },
-            ]
-        );
+    const saveProgress = async (updated) => {
+        setPuzzles(updated);
+        await AsyncStorage.setItem(PUZZLES_KEY, JSON.stringify(updated));
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <Text style={styles.cardLabel}>1 THING</Text>
-                <Text style={styles.cardDate}>{item.date}</Text>
-            </View>
-            <View style={styles.gratitudeItem}>
-                <Text style={styles.gratitudeText}>{item.gratitudes[0]}</Text>
-            </View>
+    const markAsSolved = (id) => {
+        const updated = puzzles.map(p => p.id === id ? { ...p, solved: true } : p);
+        saveProgress(updated);
+        setActivePuzzle(null);
+    };
 
-            <View style={styles.cardHeader}>
-                <Text style={styles.cardLabel}>2 THINGS</Text>
-            </View>
-            <View style={styles.gratitudeItem}>
-                <Text style={styles.gratitudeText}>{item.gratitudes[1]}</Text>
-            </View>
-
-            <View style={styles.cardHeader}>
-                <Text style={styles.cardLabel}>3 THINGS</Text>
-            </View>
-            <View style={styles.gratitudeItem}>
-                <Text style={styles.gratitudeText}>{item.gratitudes[2]}</Text>
-                <TouchableOpacity style={styles.cardIcon} onPress={() => handleDelete(item.date)}>
-                    <Image
-                        source={require('../assets/img/mingcute_delete-fill.png')}
-                        style={styles.cardIconImage}
-                    />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
+    const renderPuzzleComponent = () => {
+        if (!activePuzzle) return null;
+        switch (activePuzzle.type) {
+            case 'image':
+                return <ImagePuzzle onSolved={() => markAsSolved(activePuzzle.id)} />;
+            case 'math':
+                return <MathPuzzle onSolved={() => markAsSolved(activePuzzle.id)} />;
+            case 'logic':
+                return <LogicPuzzle onSolved={() => markAsSolved(activePuzzle.id)} />;
+            case 'word':
+                return <WordPuzzle onSolved={() => markAsSolved(activePuzzle.id)} />;
+            default:
+                return null;
+        }
+    };
 
     return (
-        <ImageBackground
-            source={require('../assets/img/442e8c309863b1e1e540b98edd7314e38f0bb392.png')}
-            style={styles.background}
-        >
-            <SafeAreaView style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>My Things</Text>
-                    <TouchableOpacity
-                        style={styles.headerIconContainer}
-                        onPress={() => navigation.navigate('GratitudeEntryScreen')}
-                    >
-                        <Image source={require('../assets/img/gridicons_add.png')} />
-                    </TouchableOpacity>
-                </View>
+        // <SafeAreaView style={styles.container}>
+            <ImageBackground
+                source={require('../assets/img/442e8c309863b1e1e540b98edd7314e38f0bb392.png')}
+                style={styles.background}
+            >
 
-                {/* Conditional rendering: if no entries */}
-                {gratitudeEntries.length === 0 && !isLoading ? (
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Unfortunately, there is nothing yet.</Text>
+
+            <Text style={styles.header}>Puzzle Challenges</Text>
+            <ScrollView style={{paddingHorizontal: 10}}>
+                {puzzles.map((puzzle) => (
+                    <TouchableOpacity
+                        key={puzzle.id}
+                        style={styles.puzzleCard}
+                        onPress={() => setActivePuzzle(puzzle)}
+                    >
+                        <Text style={styles.puzzleTitle}>{puzzle.title}</Text>
+                        {puzzle.solved && (
+                            <Image
+                                source={require('../assets/img/1e642a09e829362d72cb205f8f4cda9d02de3f1b.png')}
+                                style={styles.trophyIcon}
+                            />
+                        )}
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            <Modal visible={!!activePuzzle} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        {renderPuzzleComponent()}
+                        <TouchableOpacity style={styles.closeButton} onPress={() => setActivePuzzle(null)}>
+                            <Text style={{ color: '#000', fontWeight: 'bold', fontFamily: 'Rowdies-Regular', }}>Close</Text>
+                        </TouchableOpacity>
                     </View>
-                ) : (
-                    <FlatList
-                        data={gratitudeEntries}
-                        renderItem={renderItem}
-                        keyExtractor={item => item.date}
-                        contentContainerStyle={styles.listContent}
-                    />
-                )}
-                <View style={{ marginBottom: 100 }} />
-            </SafeAreaView>
-        </ImageBackground>
+                </View>
+            </Modal>
+            </ImageBackground>
+
+        // </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    background: {
-        flex: 1,
-        resizeMode: 'cover',
-    },
-    container: {
-        flex: 1,
-        paddingTop: 20,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        marginBottom: 20,
-    },
-    headerIconContainer: {
-        width: 30,
-        height: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerTitle: {
-        color: '#fff',
-        fontFamily: 'Rowdies-Regular',
-        fontSize: 22,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        flex: 1,
-    },
-    listContent: {
-        paddingHorizontal: 20,
-        paddingBottom: 20,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    card: {
-        backgroundColor: '#430000',
-        borderRadius: 15,
+    container: { flex: 1, backgroundColor: '#430000', padding: 20 },
+    header: { color: '#FFD700', fontFamily: 'Rowdies-Regular',paddingTop: 80,fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+    puzzleCard: {
+        backgroundColor: '#600000',
         padding: 15,
-        marginBottom: 15,
-    },
-    cardHeader: {
+        borderRadius: 15,
+        fontFamily: 'Rowdies-Regular',
+        marginBottom: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
     },
-    cardLabel: {
-        color: '#FFD700',
-        fontFamily: 'Rowdies-Regular',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    cardDate: {
-        color: '#FFD700',
-        fontSize: 12,
-        fontFamily: 'Rowdies-Regular',
-    },
-    gratitudeItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#5C0000',
-        borderRadius: 10,
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        marginBottom: 10,
-    },
-    gratitudeText: {
-        color: '#fff',
-        fontFamily: 'Rowdies-Regular',
-        fontSize: 16,
-        flex: 1,
-    },
-    cardIcon: {
-        marginLeft: 10,
-        padding: 5,
-    },
-    cardIconImage: {
-        width: 20,
-        height: 20,
-        tintColor: '#FFD700',
-    },
+    background: { flex: 1, resizeMode: 'cover' },
+
+    puzzleTitle: { color: '#fff',fontFamily: 'Rowdies-Regular', fontSize: 18, fontWeight: 'bold' },
+    trophyIcon: { width: 30, height: 30, resizeMode: 'contain' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center' },
+    modalContent: { backgroundColor: '#430000', padding: 20, borderRadius: 20, width: '90%' },
+    closeButton: { backgroundColor: '#FFD700', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, alignSelf: 'center', marginTop: 10 },
 });
 
-export default GratitudeListScreen;
+export default PuzzleChallengesScreen;
