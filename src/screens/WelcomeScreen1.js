@@ -4,12 +4,12 @@ import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image } from
 const WelcomeScreen1 = ({ navigation }) => {
     return (
         <ImageBackground
-            source={require('../assets/img/442e8c309863b1e1e540b98edd7314e38f0bb392.png')} // Replace with your image path
+            source={require('../assets/img/442e8c309863b1e1e540b98edd7314e38f0bb392.png')}
             style={styles.background}
         >
             <View style={styles.container}>
                 <Image
-                    source={require('../assets/img/LOGO1.png')} // Replace with your image path
+                    source={require('../assets/img/LOGO1.png')}
                     style={styles.logo}
                 />
                 <View style={styles.contentBox}>
@@ -17,7 +17,8 @@ const WelcomeScreen1 = ({ navigation }) => {
                     <Text style={styles.description}>
                         Welcome to Awaken Your Dragon Way - your personal source of daily motivation! Under the watchful eye of the Buddha, you will receive wise phrases that will ignite your inner flame
                     </Text>
-                    <TouchableOpacity style={styles.button} onPress={()=>{navigation.navigate('WelcomeScreen2')}}>
+                    {/*<TouchableOpacity style={styles.button} onPress={()=>{navigation.navigate('WelcomeScreen2')}}>*/}
+                    <TouchableOpacity style={styles.button}>
                         <Text style={styles.buttonText}>NEXT</Text>
                     </TouchableOpacity>
                 </View>
